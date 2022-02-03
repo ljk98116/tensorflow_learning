@@ -147,7 +147,7 @@ class DQN():
 
     def save_model(self):
         saver = tf.train.Saver()
-        save_path = saver.save(self.sess,'../DQN_Models/DQN_final.ckpt')
+        save_path = saver.save(self.sess,'../DQN_Models/DQN_cartpolev0_final.ckpt')
 
 class DDQN(DQN):
     def __init__(self,
@@ -192,4 +192,4 @@ class DDQN(DQN):
 
     def save_model(self):
         saver = tf.train.Saver()
-        save_path = saver.save(self.sess,'../DQN_Models/DDQN_final.ckpt')
+        save_path = saver.save(self.sess,'../DQN_Models/DDQN_cartpolev0_final.ckpt')

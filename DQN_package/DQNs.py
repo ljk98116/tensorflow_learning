@@ -53,22 +53,6 @@ class DQN():
 
             self.q_eval = tf.matmul(layer1,w2) + b2
 
-        # target net
-        with tf.variable_scope('target_net'):
-            self.next_state = tf.placeholder(tf.float32, [None, self.state_dim], name='next_state')
-
-            w1_t = tf.Variable(tf.truncated_normal([self.state_dim, self.hidden]))
-            b1_t = tf.Variable(tf.constant(0.01, shape=[self.hidden]))
-
-            w2_t = tf.Variable(tf.truncated_normal([self.hidden, self.action_dim]))
-            b2_t = tf.Variable(tf.constant(0.01, shape=[self.action_dim]))
-
-            layer1_t = tf.nn.relu(
-                tf.matmul(self.next_state, w1_t) + b1_t
-            )
-
-            self.q_target = tf.matmul(layer1_t, w2_t) + b2_t
-
     def create_training_method(self):
         self.y_input = tf.placeholder(tf.float32,[None],name='y_input')
         self.action_input = tf.placeholder(tf.float32,[None,self.action_dim],name='action_input')

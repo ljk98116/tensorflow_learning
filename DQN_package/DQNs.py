@@ -135,17 +135,22 @@ class DQN():
 
 class DDQN(DQN):
     def __init__(self,
-                state_dim=0,
-                action_dim=0
+                 state_dim=0,
+                 action_dim=0,
+                 gamma=0.9,
+                 replay_size=10000,
+                 batch_size=32,
+                 learning_rate=0.0001,
+                 hidden=200  # hidden layer node number
     ):
         super(DDQN,self).__init__(
                 state_dim=state_dim,
                 action_dim=action_dim,
-                gamma=0.9,
-                replay_size=10000,
-                batch_size = 32,
-                learning_rate = 0.0001,
-                hidden = 200 # hidden layer node number
+                gamma=gamma,
+                replay_size=replay_size,
+                batch_size = batch_size,
+                learning_rate = learning_rate,
+                hidden = hidden # hidden layer node number
         )
 
     def neoral_net_training(self):
@@ -177,3 +182,6 @@ class DDQN(DQN):
     def save_model(self):
         saver = tf.train.Saver()
         save_path = saver.save(self.sess,'../DQN_Models/DDQN_cartpolev0_final.ckpt')
+
+class Dueling_DQN(DQN):
+    pass

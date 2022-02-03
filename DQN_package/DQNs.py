@@ -184,4 +184,49 @@ class DDQN(DQN):
         save_path = saver.save(self.sess,'../DQN_Models/DDQN_cartpolev0_final.ckpt')
 
 class Dueling_DQN(DQN):
+    def __init__(self,
+                 state_dim=0,
+                 action_dim=0,
+                 gamma=0.9,
+                 replay_size=10000,
+                 batch_size=32,
+                 learning_rate=0.0001,
+                 hidden=200,  # hidden layer node number
+                 strategy = 0 # 0 means optical choice,1 means average
+    ):
+        super(Dueling_DQN,self).__init__(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            gamma=gamma,
+            replay_size=replay_size,
+            batch_size=batch_size,
+            learning_rate=learning_rate,
+            hidden=hidden  # hidden layer node number
+        )
+
+    def create_neoral_nets(self):
+        with tf.variable_scope('Q_net'):
+            self.state = tf.placeholder(tf.float32,[None,self.state_dim],name='state')
+            w1 = tf.Variable(tf.truncated_normal([self.state_dim,self.hidden]))
+            b1 = tf.Variable(tf.constant(0.01,shape=[self.hidden]))
+            self.layer1 = tf.nn.relu(tf.matmul(self.state,w1) + b1)
+
+            with tf.variable_scope('V_layer'):
+                w2 = tf.Variable(tf.truncated_normal([self.hidden,1]))
+                b2 = tf.Variable(tf.constant(0.01,shape=[1]))
+                self.V = tf.matmul(self.layer1,w2) + b2
+
+            with tf.variable_scope('A_layer'):
+                w2 = tf.Variable(tf.truncated_normal([self.hidden,self.action_dim]))
+                b2 = tf.Variable(tf.constant(0.01,shape=[self.action_dim]))
+                self.A = tf.matmul(self.layer1,w2) + b2
+
+            with tf.variable_scope('last_layer'):
+                self.q_eval = self.V + (self.A - tf.reduce_max(self.A,axis=1,keepdims=True))
+
+    def save_model(self):
+        saver = tf.train.Saver()
+        save_path = saver.save(self.sess,'../DQN_Models/Dueling_DQN_cartpolev0_final.ckpt')
+
+class Average_DQN(DQN):
     pass

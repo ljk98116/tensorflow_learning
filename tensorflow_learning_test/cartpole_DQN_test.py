@@ -1,5 +1,6 @@
 from DQN_package.DQNs import DDQN
 from DQN_package.DQNs import DQN
+from DQN_package.DQNs import Dueling_DQN
 import gym
 import matplotlib.pyplot as plt
 
@@ -11,8 +12,9 @@ TEST = 10 # The number of experiment test every 100 episode
 def main():
   # initialize OpenAI Gym env and dqn agent
   env = gym.make(ENV_NAME)
-  agent = DQN(action_dim=env.action_space.n,state_dim=env.reset().shape[0])
+  # agent = DQN(action_dim=env.action_space.n,state_dim=env.reset().shape[0])
   # agent = DDQN(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
+  agent = Dueling_DQN(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
   for episode in range(EPISODE):
     # initialize task
     #print(agent.time_step)

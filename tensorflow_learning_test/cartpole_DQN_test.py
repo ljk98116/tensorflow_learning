@@ -44,6 +44,7 @@ def main():
       ave_reward = total_reward/TEST
       print('episode: ',episode,'Evaluation Average Reward:',ave_reward)
       if ave_reward >= 200:
+
         break
 
 if __name__ == "__main__":

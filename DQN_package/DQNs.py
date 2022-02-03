@@ -145,6 +145,10 @@ class DQN():
         self.replace_target_op = [tf.assign(t,e) for t,e in zip(t_params,e_params)]
         self.sess.run(self.replace_target_op)
 
+    def save_model(self):
+        saver = tf.train.Saver()
+        save_path = saver.save(self.sess,'../DQN_Models/DQN_final.ckpt')
+
 class DDQN(DQN):
     def __init__(self,
                 state_dim=0,
@@ -185,3 +189,7 @@ class DDQN(DQN):
             self.action_input:action_batch,
             self.y_input:y_batch
         })
+
+    def save_model(self):
+        saver = tf.train.Saver()
+        save_path = saver.save(self.sess,'../DQN_Models/DDQN_final.ckpt')

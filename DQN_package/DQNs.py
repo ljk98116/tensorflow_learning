@@ -120,7 +120,7 @@ class DQN():
         reward_batch = [data[2] for data in batch]
         next_state_batch = [data[3] for data in batch]
 
-        q_target = self.q_eval.eval(feed_dict={self.next_state:next_state_batch})
+        q_target = self.q_eval.eval(feed_dict={self.state:next_state_batch})
 
         y_batch = []
         for i in range(self.batch_size):

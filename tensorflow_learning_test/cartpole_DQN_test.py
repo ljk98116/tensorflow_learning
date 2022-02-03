@@ -11,7 +11,7 @@ TEST = 10 # The number of experiment test every 100 episode
 def main():
   # initialize OpenAI Gym env and dqn agent
   env = gym.make(ENV_NAME)
-  agent = DDQN(action_dim=env.action_space.n,state_dim=env.reset().shape[0])
+  agent = DQN(action_dim=env.action_space.n,state_dim=env.reset().shape[0])
 
   for episode in range(EPISODE):
     # initialize task

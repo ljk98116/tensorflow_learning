@@ -1,6 +1,7 @@
 from DQN_package.DQNs import DDQN
 from DQN_package.DQNs import DQN
 from DQN_package.DQNs import Dueling_DQN
+from DQN_package.DQNs import Average_DQN
 import gym
 import matplotlib.pyplot as plt
 
@@ -14,7 +15,8 @@ def main():
   env = gym.make(ENV_NAME)
   # agent = DQN(action_dim=env.action_space.n,state_dim=env.reset().shape[0])
   # agent = DDQN(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
-  agent = Dueling_DQN(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
+  # agent = Dueling_DQN(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
+  agent = Average_DQN(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
   for episode in range(EPISODE):
     # initialize task
     #print(agent.time_step)
@@ -29,6 +31,7 @@ def main():
       agent.train()
       # print(agent.time_step)
       state = next_state
+      agent.store_net_state()
       if done:
         break
     # Test every 100 episodes
@@ -46,7 +49,7 @@ def main():
       ave_reward = total_reward/TEST
       print('episode: ',episode,'Evaluation Average Reward:',ave_reward)
       if ave_reward >= 200:
-        agent.save_model()
+        # agent.save_model()
         break
 
 if __name__ == "__main__":

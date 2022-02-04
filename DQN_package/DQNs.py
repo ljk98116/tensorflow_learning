@@ -121,14 +121,6 @@ class DQN():
         })
         # print(self.cost)
 
-
-    def copy_params(self):
-        t_params = tf.get_collection('target_net')
-        e_params = tf.get_collection('online_net')
-
-        self.replace_target_op = [tf.assign(t,e) for t,e in zip(t_params,e_params)]
-        self.sess.run(self.replace_target_op)
-
     def save_model(self):
         saver = tf.train.Saver()
         save_path = saver.save(self.sess,'../DQN_Models/DQN_cartpolev0_final.ckpt')
@@ -229,4 +221,92 @@ class Dueling_DQN(DQN):
         save_path = saver.save(self.sess,'../DQN_Models/Dueling_DQN_cartpolev0_final.ckpt')
 
 class Average_DQN(DQN):
-    pass
+    def __init__(self,
+                 state_dim=0,
+                 action_dim=0,
+                 gamma=0.9,
+                 replay_size=10000,
+                 batch_size=32,
+                 learning_rate=0.0001,
+                 hidden=200,  # hidden layer node number
+                 buffer_size=10
+    ):
+        self.net_buffer = 0
+        self.net_buffer_size = buffer_size
+        super(Average_DQN,self).__init__(
+                state_dim=state_dim,
+                action_dim=action_dim,
+                gamma=gamma,
+                replay_size=replay_size,
+                batch_size = batch_size,
+                learning_rate = learning_rate,
+                hidden = hidden # hidden layer node number
+        )
+
+    # copy e_params to net_param_buffer
+    def store_net_state(self):
+        self.save_model_s(self.net_buffer % self.net_buffer_size)
+        self.net_buffer += 1
+
+    def create_training_method(self):
+        self.y_input = tf.placeholder(tf.float32,[None],name='y_input')
+        self.action_input = tf.placeholder(tf.float32,[None,self.action_dim],name='action_input')
+        self.other_q_eval = tf.placeholder(tf.float32, [None, self.action_dim], name='other_q_eval')
+
+        self.do_average = tf.reduce_mean([self.q_eval,self.other_q_eval])
+
+        # batch-action Q_eval
+        q_val = tf.reduce_sum(tf.multiply(self.do_average,self.action_input),reduction_indices=1)
+        self.loss = tf.reduce_mean(tf.square(self.y_input - q_val))
+        self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
+
+    def neoral_net_training(self):
+        batch = random.sample(self.replay_buffer,self.batch_size)
+
+        state_batch = [data[0] for data in batch]
+        action_batch = [data[1] for data in batch]
+        reward_batch = [data[2] for data in batch]
+        next_state_batch = [data[3] for data in batch]
+
+        q_target = self.q_eval.eval(feed_dict={self.state:next_state_batch})
+
+        y_batch = []
+        for i in range(self.batch_size):
+            # done
+            if batch[i][4]:
+                y_batch.append(reward_batch[i])
+            else:
+                y_batch.append(reward_batch[i] + self.gamma * np.max(q_target[i]))
+
+        # print(self.net_buffer)
+        Q_history = []
+        # store current net params
+        self.save_model_s(self.net_buffer_size+1)
+        for params in range(self.net_buffer_size):
+            # load models
+            self.load_model_s(params)
+            # print(self.q_eval.eval(feed_dict={self.state:state_batch}))
+            Q_history.append(self.q_eval.eval(feed_dict={self.state:state_batch}))
+
+        # get average
+        q_average_k = np.mean(np.array(Q_history),axis=0)
+        # print(q_average_k)
+
+        # recover the original net state
+        self.load_model_s(self.net_buffer_size+1)
+
+        _,self.cost = self.sess.run([self.train_op,self.loss],feed_dict={
+            self.state:state_batch,
+            self.other_q_eval:q_average_k,
+            self.action_input:action_batch,
+            self.y_input:y_batch
+        })
+
+    def save_model_s(self,num):
+        saver = tf.train.Saver()
+        saver.save(self.sess,'Average_DQN'+ str(num) +'_cartpolev0_final.ckpt')
+
+    def load_model_s(self,num):
+        saver = tf.train.Saver()
+        saver.restore(self.sess,'Average_DQN'+ str(num) +'_cartpolev0_final.ckpt')
+

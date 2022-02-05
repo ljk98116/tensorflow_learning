@@ -229,9 +229,9 @@ class Average_DQN(DQN):
                  batch_size=32,
                  learning_rate=0.0001,
                  hidden=200,  # hidden layer node number
-                 buffer_size=10
+                 buffer_size=20
     ):
-        self.net_buffer = 0
+        self.net_buffer = deque()
         self.net_buffer_size = buffer_size
         super(Average_DQN,self).__init__(
                 state_dim=state_dim,
@@ -245,8 +245,9 @@ class Average_DQN(DQN):
 
     # copy e_params to net_param_buffer
     def store_net_state(self):
-        self.save_model_s(self.net_buffer % self.net_buffer_size)
-        self.net_buffer += 1
+        if len(self.net_buffer) == self.net_buffer_size:
+            self.net_buffer.popleft()
+        self.net_buffer.append(tf.get_collection(tf.GraphKeys.VARIABLES,scope='online_net'))
 
     def create_training_method(self):
         self.y_input = tf.placeholder(tf.float32,[None],name='y_input')
@@ -261,6 +262,7 @@ class Average_DQN(DQN):
         self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
 
     def neoral_net_training(self):
+        print(self.time_step)
         batch = random.sample(self.replay_buffer,self.batch_size)
 
         state_batch = [data[0] for data in batch]
@@ -281,10 +283,12 @@ class Average_DQN(DQN):
         # print(self.net_buffer)
         Q_history = []
         # store current net params
-        self.save_model_s(self.net_buffer_size+1)
-        for params in range(self.net_buffer_size):
+        current_params = tf.get_collection(tf.GraphKeys.VARIABLES,scope='online_net')
+        for params in self.net_buffer:
             # load models
-            self.load_model_s(params)
+            e_params = tf.get_collection(tf.GraphKeys.VARIABLES,scope='online_net')
+            self.replace_op = [tf.assign(t,e) for t,e in zip(e_params,params)]
+            self.sess.run(self.replace_op)
             # print(self.q_eval.eval(feed_dict={self.state:state_batch}))
             Q_history.append(self.q_eval.eval(feed_dict={self.state:state_batch}))
 
@@ -293,7 +297,9 @@ class Average_DQN(DQN):
         # print(q_average_k)
 
         # recover the original net state
-        self.load_model_s(self.net_buffer_size+1)
+        e_params = tf.get_collection(tf.GraphKeys.VARIABLES, scope='online_net')
+        self.replace_op = [tf.assign(t, e) for t, e in zip(e_params, current_params)]
+        self.sess.run(self.replace_op)
 
         _,self.cost = self.sess.run([self.train_op,self.loss],feed_dict={
             self.state:state_batch,
@@ -301,12 +307,4 @@ class Average_DQN(DQN):
             self.action_input:action_batch,
             self.y_input:y_batch
         })
-
-    def save_model_s(self,num):
-        saver = tf.train.Saver()
-        saver.save(self.sess,'Average_DQN'+ str(num) +'_cartpolev0_final.ckpt')
-
-    def load_model_s(self,num):
-        saver = tf.train.Saver()
-        saver.restore(self.sess,'Average_DQN'+ str(num) +'_cartpolev0_final.ckpt')
 

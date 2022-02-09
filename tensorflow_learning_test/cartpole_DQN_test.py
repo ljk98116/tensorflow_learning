@@ -2,6 +2,7 @@ from DQN_package.DQNs import DDQN
 from DQN_package.DQNs import DQN
 from DQN_package.DQNs import Dueling_DQN
 from DQN_package.DQNs import Average_DQN
+from DQN_package.DQNs import Rainbow
 import gym
 import matplotlib.pyplot as plt
 
@@ -16,12 +17,13 @@ def main():
   # agent = DQN(action_dim=env.action_space.n,state_dim=env.reset().shape[0])
   # agent = DDQN(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
   # agent = Dueling_DQN(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
-  agent = Average_DQN(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
+  agent = Rainbow(action_dim=env.action_space.n, state_dim=env.reset().shape[0])
   for episode in range(EPISODE):
     # initialize task
     #print(agent.time_step)
     state = env.reset()
     # Train
+    # print(episode)
     for step in range(STEP):
       action = agent.choose_epsilon_action(state) # e-greedy action for train
       next_state,reward,done,_ = env.step(action)
@@ -31,7 +33,7 @@ def main():
       agent.train()
       # print(agent.time_step)
       state = next_state
-      agent.store_net_state()
+      # agent.store_net_state()
       if done:
         break
     # Test every 100 episodes

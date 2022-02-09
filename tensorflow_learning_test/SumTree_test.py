@@ -22,6 +22,14 @@ def test():
     tree3.print_tree2()
     print()
     print(tree3.traverse(24))
+    print()
+    for i in range(len(tree3.leaf_list)):
+        print(tree3.leaf_list[i].val)
+    print()
+    tree1.update_tree(0,2)
+    tree1.print_tree1()
+    print()
+    tree1.print_tree2()
 
 if __name__ == "__main__":
     test()
